@@ -394,8 +394,8 @@ def assign_vertical_positions(df):
     active_trainings = []  # List of tuples (end_date, sort_key)
     
     for _, row in df.iterrows():
-        start = row['Start Date']
-        end = row['End Date']
+        start = row['Start Week']
+        end = row['End Week']
         transition = row['Transition']
         sort_key = row['sort_key']
         
