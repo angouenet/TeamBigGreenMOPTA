@@ -375,6 +375,23 @@ schedule_df = schedule_df[[
 
 st.dataframe(schedule_df.sort_values('Week'))
 
+html_table = schedule_df.to_html(classes='dataframe', index=False)
+
+# Apply custom CSS to center the content
+html_table_with_style = f"""
+    <style>
+        .dataframe {{
+            margin: 0 auto;
+            text-align: center;
+        }}
+    </style>
+    {html_table}
+"""
+
+# Display the styled dataframe
+st.markdown(html_table_with_style, unsafe_allow_html=True)
+
+
 ### GANTT ###
 st.subheader("Training Gantt")
 start_date_2024 = datetime(2024, 1, 1)
