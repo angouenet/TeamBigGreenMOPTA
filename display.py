@@ -389,35 +389,33 @@ custom_order = [
     'External Boeing FO → Boeing FO']
 
 def assign_vertical_positions(df):
-    df = df.sort_values(['sort_key', 'Start Date'])
+    df = df.sort_values(['Start Date', 'sort_key'])
     positions = []
-    active_trainings = []  # List of tuples (end_date, sort_key)
+    active_trainings = []  # List of end dates
     
     for _, row in df.iterrows():
-        start = row['Start Week']
-        end = row['End Week']
-        transition = row['Transition']
-        sort_key = row['sort_key']
+        start = row['Start Date']
+        end = row['End Date']
         
         # Find the first available position where there's no overlap
         pos = 0
         while True:
-            # Check if this position is available (no overlapping trainings in the same position)
+            # Check if this position is available
             available = True
-            for existing_end, existing_sort_key, existing_pos in active_trainings:
-                if existing_pos == pos and existing_end >= start and existing_sort_key == sort_key:
+            for existing_end, existing_pos in active_trainings:
+                if existing_pos == pos and existing_end >= start:
                     available = False
                     break
             
             if available:
                 break
-            pos += 2
+            pos += 1
         
         positions.append(pos)
         
         # Add to active trainings and clean up finished ones
-        active_trainings.append((end, sort_key, pos))
-        active_trainings = [(e, k, p) for e, k, p in active_trainings if e >= start]
+        active_trainings.append((end, pos))
+        active_trainings = [(e, p) for e, p in active_trainings if e >= start]
     
     return positions
 
