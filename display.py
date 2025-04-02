@@ -411,7 +411,7 @@ def assign_vertical_positions(df):
             
             if available:
                 break
-            pos += 1
+            pos += 2
         
         positions.append(pos)
         
