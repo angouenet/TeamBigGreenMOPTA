@@ -21,14 +21,21 @@ pilot_files = [
     if f.startswith("pilot_output_") and f.endswith(".xlsx")
 ]
 
-excel_files = [baseline_file] + sorted(pilot_files)
+#Sorted
+
+def sort_key(filename):
+    parts = filename.replace("pilot_output_", "").replace(".xlsx", "").split("_")
+    return (float(parts[0]), float(parts[1]))
+
+pilot_files_sorted = sorted(pilot_files, key=sort_key)
+
+excel_files = [baseline_file] + pilot_files_sorted
 
 display_names = ["Baseline"]
-for file in pilot_files:
+for file in pilot_files_sorted:
     parts = file.replace("pilot_output_", "").replace(".xlsx", "").split("_")
     grounding_coeff, hire_cost = parts[0], parts[1]
     display_names.append(f"Training (Grounding Coefficient={grounding_coeff}, External Cost={float(hire_cost):,.0f})")
-
 
 excel_file_paths = [os.path.join(folder_path, file) for file in excel_files]
 
@@ -277,6 +284,7 @@ allocation_dfs = {
 }
 
 grounded_fig = create_grounded_chart(allocation_dfs, demand_wide)
+st.markdown("### Hover for more information!")
 st.plotly_chart(grounded_fig, use_container_width=True)
 
 ### Training Data ###
@@ -330,14 +338,19 @@ baseline_file = "baseline_training_output.txt"
 training_files.append(baseline_file)
 display_names.append("Baseline Training Output")
 
+files_with_params = []
 for file in os.listdir(folder_path):
     if file.startswith("training_output_") and file.endswith(".txt"):
-        # Extract parameters
         params = file.replace("training_output_", "").replace(".txt", "").split("_")
-        if len(params) == 2:  # Ensure format is correct
-            grounding_coeff, hire_cost = params[0], params[1]
-            training_files.append(file)
-            display_names.append(f"Training (Grounding Coefficient={grounding_coeff}, External Cost={float(hire_cost):,.0f})")
+        if len(params) == 2: 
+            grounding_coeff, hire_cost = float(params[0]), float(params[1])
+            files_with_params.append((grounding_coeff, hire_cost, file))
+
+files_with_params.sort(key=lambda x: (x[0], x[1]))
+
+for grounding_coeff, hire_cost, file in files_with_params:
+    training_files.append(file)
+    display_names.append(f"Training (Grounding Coefficient={grounding_coeff}, External Cost={hire_cost:,.0f})")
 
 txt_map = dict(zip(display_names, [os.path.join(folder_path, f) for f in training_files]))
 
