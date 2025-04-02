@@ -453,10 +453,9 @@ fig = px.timeline(
     title="Training Schedule Projected Onto 2024")
 
 fig.update_yaxes(
-    autorange="reversed",
     #tickvals=list(range(len(custom_order))),
     #ticktext=custom_order,
-    showgrid=True,
+    showgrid=False,
     showticklabels=False,  # This ensures the transition labels are shown
     # Remove numeric labels by hiding side ticks
     side='right',        # Moves the labels to the right side (optional)
