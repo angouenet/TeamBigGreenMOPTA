@@ -69,7 +69,7 @@ def create_stacked_qual_chart(df, title):
     melted_df = df.melt(id_vars=['Variable'], var_name='Week', value_name='Count')
 
     weeks = sorted(melted_df['Week'].unique(), key=lambda x: int(x.split()[-1]))
-    quals = ["Qualification 0", "Qualification 1", "Qualification 2", "Qualification 3", "External Hire"] # Omit "External Hire" - It's in training gantt
+    quals = ["Qualification 0", "Qualification 1", "Qualification 2", "Qualification 3"] # Omit "External Hire" - It's in training gantt
     
     fig = go.Figure()
     
@@ -347,21 +347,19 @@ st.dataframe(schedule_df.sort_values('Week'))
 
 ### GANTT ###
 
+# Calculate dates (your existing code)
 start_date_2024 = datetime(2024, 1, 1)
 
 def calculate_dates(row):
     start_week = row['Week'] - 1
     duration_weeks = row['Duration']
-    
     start_date = start_date_2024 + timedelta(weeks=start_week)
     end_date = start_date + timedelta(weeks=duration_weeks) - timedelta(days=1)
-    
     return pd.Series([start_date, end_date])
 
 schedule_df[['Start Date', 'End Date']] = schedule_df.apply(calculate_dates, axis=1)
 
-st.subheader("Training Schedule Gantt Chart")
-
+# Custom ordering
 custom_order = [
     'Boeing FO → Airbus FO',
     'Boeing C → Airbus C', 
@@ -369,101 +367,85 @@ custom_order = [
     'External Boeing FO → Boeing FO'
 ]
 
-priority_map = {transition: idx for idx, transition in enumerate(custom_order)}
-
-schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
-schedule_df = schedule_df.sort_values('sort_key')
-
-schedule_df['Task ID'] = schedule_df.index
-
+# Vertical positioning algorithm (optimized)
 def assign_vertical_positions(df):
     df = df.sort_values(['sort_key', 'Start Date'])
     positions = []
-    current_positions = {}  #{transition_type: {position: end_date}}
+    active_trainings = {}  # {transition: [end_dates]}
     
     for _, row in df.iterrows():
         start = row['Start Date']
         end = row['End Date']
         transition = row['Transition']
         
-        if transition not in current_positions:
-            current_positions[transition] = {}
+        if transition not in active_trainings:
+            active_trainings[transition] = []
         
+        # Find first available position (0 if no overlap)
         pos = 0
-        while True:
-            if pos not in current_positions[transition] or current_positions[transition][pos] < start:
+        for existing_end in sorted(active_trainings[transition]):
+            if existing_end < start:
                 break
             pos += 1
         
         positions.append(pos)
-        current_positions[transition][pos] = end
+        active_trainings[transition].append(end)
         
-        current_positions[transition] = {k: v for k, v in current_positions[transition].items() if v >= start}
+        # Clean up finished trainings
+        active_trainings[transition] = [e for e in active_trainings[transition] if e >= start]
     
     return positions
 
+# Apply positioning
+priority_map = {t: i for i, t in enumerate(custom_order)}
+schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
+schedule_df = schedule_df.sort_values('sort_key')
 schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
+# Dynamic Y-axis spacing
+max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * 1.2 + 
-    schedule_df['Vertical Position'] * 0.4
+    schedule_df['sort_key'] +  # Base position
+    schedule_df['Vertical Position'] * 0.2  # Small offset only when needed
 )
 
-transition_types = schedule_df['Transition'].unique()
-colors = px.colors.qualitative.Plotly[:len(transition_types)]
-color_map = {t: c for t, c in zip(transition_types, colors)}
-
-schedule_df['Start Week'] = schedule_df['Week']
-schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
-
+# Visualization
 fig = px.timeline(
     schedule_df,
     x_start="Start Date",
     x_end="End Date",
     y="Y Value",
     color="Transition",
-    color_discrete_map=color_map,
+    color_discrete_map={t: px.colors.qualitative.Plotly[i] for i, t in enumerate(custom_order)},
     hover_name="Transition",
     hover_data={
         "Start Week": True,
         "End Week": True,
         "Duration": True,
-        "Num Trainees": True,
-        "Start Date": False,
-        "End Date": False,
-        "Y Value": False
+        "Num Trainees": True
     },
-    title="Training Schedule Projected Onto 2024",
-    #subtitle="Number of Trainees in Each Bar"
+    title="Training Schedule Projected Onto 2024"
 )
 
+# Y-axis configuration
 fig.update_yaxes(
     autorange="reversed",
-    tickvals=[i * 1.5 for i in range(len(custom_order))], 
-    ticktext=custom_order, 
+    tickvals=list(range(len(custom_order))),
+    ticktext=custom_order,
     showgrid=True
 )
 
+# Layout adjustments
 fig.update_layout(
-    annotations=[
-        dict(
-            text="Hover to View the Number of Trainees",
-            x=0.5,  # Centered
-            y=1.1,  # Slightly above the title
-            xref="paper",
-            yref="paper",
-            showarrow=False,
-            font=dict(size=14)
-        )
-    ]
-)
-
-fig.update_layout(
-    height=800,
+    height=600,
     xaxis_title="Timeline",
     yaxis_title="Training Transition",
     showlegend=True,
-    margin=dict(l=100, r=50, b=100, t=100)
+    margin=dict(l=100, r=50, b=100, t=100),
+    plot_bgcolor='white'
 )
 
-st.plotly_chart(fig, use_container_width=True, config={'staticPlot': False})
+# Consistent bar width
+fig.update_traces(width=0.4)
+
+st.plotly_chart(fig, use_container_width=True)
