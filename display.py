@@ -456,12 +456,21 @@ fig.update_yaxes(
     autorange="reversed",
     tickvals=list(range(len(custom_order))),
     ticktext=custom_order,
-    showgrid=True)
-
+    showgrid=True,
+    showticklabels=True,  # This ensures the transition labels are shown
+    tickmode='array',    # Explicitly set tick mode
+    # Remove numeric labels by hiding side ticks
+    side='right',        # Moves the labels to the right side (optional)
+    showline=False,      # Hides the axis line
+    ticks=''            # Hides the tick marks
+)
 fig.update_layout(
     height=600,
     xaxis_title="Timeline",
-    yaxis_title="Training Transition",
+    yaxis=dict(
+        title='Training Transition',
+        title_standoff=15  # Adds some space between title and labels
+    ),
     showlegend=True,
     margin=dict(l=100, r=50, b=100, t=100),
     plot_bgcolor='white')
