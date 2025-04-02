@@ -445,7 +445,7 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
-    text = "Num Trainees"
+    text = "Num Trainees",
     title="Training Schedule Projected Onto 2024"
 )
 
