@@ -415,7 +415,7 @@ schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
 max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * .5 + 
+    schedule_df['sort_key'] * .9 + 
     schedule_df['Vertical Position'] * 0.2)
 
 schedule_df['Start Week'] = schedule_df['Week']
@@ -455,7 +455,7 @@ fig.update_layout(
     margin=dict(l=100, r=50, b=100, t=100),
     plot_bgcolor='white')
 
-fig.update_traces(width=0.2,
+fig.update_traces(width=0.1,
                   #textposition = 'inside',
                   #textfont=dict(size = 12, color = 'white')
 )
