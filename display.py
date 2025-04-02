@@ -379,7 +379,7 @@ schedule_df = schedule_df[[
 st.dataframe(schedule_df.sort_values('Week'))
 
 ### GANTT ###
-
+st.subheader("Training Gantt")
 start_date_2024 = datetime(2024, 1, 1)
 
 def calculate_dates(row):
