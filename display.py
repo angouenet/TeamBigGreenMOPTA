@@ -391,21 +391,34 @@ custom_order = [
 def assign_vertical_positions(df):
     df = df.sort_values(['sort_key', 'Start Date'])
     positions = []
-    active_trainings = {}  # {transition: [end_dates]}
+    active_trainings = []  # List of tuples (end_date, sort_key)
+    
     for _, row in df.iterrows():
         start = row['Start Date']
         end = row['End Date']
         transition = row['Transition']
-        if transition not in active_trainings:
-            active_trainings[transition] = []
+        sort_key = row['sort_key']
+        
+        # Find the first available position where there's no overlap
         pos = 0
-        for existing_end in sorted(active_trainings[transition]):
-            if existing_end < start:
+        while True:
+            # Check if this position is available (no overlapping trainings in the same position)
+            available = True
+            for existing_end, existing_sort_key, existing_pos in active_trainings:
+                if existing_pos == pos and existing_end >= start and existing_sort_key == sort_key:
+                    available = False
+                    break
+            
+            if available:
                 break
             pos += 1
+        
         positions.append(pos)
-        active_trainings[transition].append(end)
-        active_trainings[transition] = [e for e in active_trainings[transition] if e >= start]
+        
+        # Add to active trainings and clean up finished ones
+        active_trainings.append((end, sort_key, pos))
+        active_trainings = [(e, k, p) for e, k, p in active_trainings if e >= start]
+    
     return positions
 
 priority_map = {t: i for i, t in enumerate(custom_order)}
@@ -415,8 +428,8 @@ schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
 max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * .9 + 
-    schedule_df['Vertical Position'] * 0.2)
+    schedule_df['sort_key'] * 1 + 
+    schedule_df['Vertical Position'] * 0.15)
 
 schedule_df['Start Week'] = schedule_df['Week']
 schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
