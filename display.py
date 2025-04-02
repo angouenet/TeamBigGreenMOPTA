@@ -108,10 +108,7 @@ def create_stacked_qual_chart(df, title):
         xaxis=dict(
             tickmode='array',
             tickvals=[week for week in weeks if int(week.split()[-1]) % 10 == 0],
-            ticktext=[f"{int(week.split()[-1])}" for week in weeks if int(week.split()[-1]) % 10 == 0]
-        ),
-        title_x=0.4
-    )
+            ticktext=[f"{int(week.split()[-1])}" for week in weeks if int(week.split()[-1]) % 10 == 0]))
     return fig
 
 def create_total_vs_demand_chart(allocation_df, demand_df, title):
@@ -142,8 +139,7 @@ def create_total_vs_demand_chart(allocation_df, demand_df, title):
         xaxis_title='Week',
         yaxis_title='Number of Crew',
         legend_title='Comparison',
-        height=600,
-        title_x=0.4)
+        height=600)
     return fig
 
 demand_wide = crew_demand.pivot(index='Week', columns='Aircraft', values='Demand').reset_index()
@@ -263,7 +259,6 @@ def create_grounded_chart(allocation_dfs, demand_df):
         legend_title='Aircraft Type',
         hovermode='x unified',
         height=500,
-        title_x=0.4,
         title_font=dict(size=20),
         font=dict(size=14),
         legend=dict(
@@ -427,8 +422,7 @@ schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
 
 schedule_df['Y Value'] = (
     schedule_df['sort_key'] * 1 + 
-    schedule_df['Vertical Position'] * 0.25
-)
+    schedule_df['Vertical Position'] * 0.25)
 
 schedule_df['Start Week'] = schedule_df['Week']
 schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
@@ -450,8 +444,7 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
-    title="Training Schedule Projected Onto 2024"
-)
+    title="Training Schedule Projected Onto 2024")
 
 fig.update_yaxes(
     tickvals=sorted(schedule_df['sort_key'].unique()),
@@ -460,8 +453,7 @@ fig.update_yaxes(
     showticklabels = False,
     side='left',
     title = True,                                     
-    title_text= "Training Transition"  
-)
+    title_text= "Training Transition")
 
 fig.update_traces(width=0.2)
 
@@ -471,9 +463,7 @@ fig.update_layout(
     xaxis_title="Timeline",
     showlegend=True,
     margin=dict(l=50, r=150, b=100, t=100),
-    plot_bgcolor='white',
-    title_x=0.4
-)
+    plot_bgcolor='white')
 
 
 
