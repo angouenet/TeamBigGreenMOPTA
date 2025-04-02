@@ -445,7 +445,7 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
-    text = "Num Trainees",
+    #text = "Num Trainees",
     title="Training Schedule Projected Onto 2024"
 )
 
@@ -459,16 +459,8 @@ fig.update_yaxes(
     title_text= "Training Transition"  
 )
 
-#fig.update_traces(width=0.2)
+fig.update_traces(width=0.2)
 
-fig.update_traces(
-    width=0.2,
-    textposition='inside',
-    textfont=dict(
-        color='white',
-        size=12
-    )
-)
 
 fig.update_layout(
     height=600,
