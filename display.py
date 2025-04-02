@@ -438,7 +438,7 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
-    text="Num Trainees", # just for the pic
+    #text="Num Trainees", # just for the pic
     title="Training Schedule Projected Onto 2024")
 
 fig.update_yaxes(
@@ -456,7 +456,8 @@ fig.update_layout(
     plot_bgcolor='white')
 
 fig.update_traces(width=0.2,
-                  textposition = 'inside',
-                  textfont=dict(size = 12, color = 'white'))
+                  #textposition = 'inside',
+                  #textfont=dict(size = 12, color = 'white')
+)
 
 st.plotly_chart(fig, use_container_width=True)
