@@ -109,7 +109,8 @@ def create_stacked_qual_chart(df, title):
             tickmode='array',
             tickvals=[week for week in weeks if int(week.split()[-1]) % 10 == 0],
             ticktext=[f"{int(week.split()[-1])}" for week in weeks if int(week.split()[-1]) % 10 == 0]
-        )
+        ),
+        title_x=0.5
     )
     return fig
 
@@ -141,7 +142,8 @@ def create_total_vs_demand_chart(allocation_df, demand_df, title):
         xaxis_title='Week',
         yaxis_title='Number of Crew',
         legend_title='Comparison',
-        height=600)
+        height=600,
+        title_x=0.5)
     return fig
 
 demand_wide = crew_demand.pivot(index='Week', columns='Aircraft', values='Demand').reset_index()
@@ -271,8 +273,8 @@ def create_grounded_chart(allocation_dfs, demand_df):
             tickfont=dict(size=14)),
         yaxis=dict(
             title_font=dict(size=16),
-            tickfont=dict(size=14)))
-    
+            tickfont=dict(size=14))),
+        title_x=0.5
     return fig
 
 st.header("Grounded Aircraft Analysis")
@@ -470,6 +472,7 @@ fig.update_layout(
     showlegend=True,
     margin=dict(l=50, r=150, b=100, t=100),
     plot_bgcolor='white',
+    title_x=0.5
 )
 
 
