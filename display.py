@@ -370,7 +370,7 @@ schedule_df = schedule_df[[
 st.dataframe(schedule_df.sort_values('Week'))
 
 ### GANTT ###
-
+# Calculate dates as before
 start_date_2024 = datetime(2024, 1, 1)
 
 def calculate_dates(row):
@@ -382,56 +382,56 @@ def calculate_dates(row):
 
 schedule_df[['Start Date', 'End Date']] = schedule_df.apply(calculate_dates, axis=1)
 
+# Define custom order for transitions
 custom_order = [
     'Boeing FO → Airbus FO',
     'Boeing C → Airbus C', 
     'Boeing FO → Boeing C',
     'External Boeing FO → Boeing FO']
 
+# Assign vertical positions chronologically without overlaps
 def assign_vertical_positions(df):
-    df = df.sort_values(['Start Date', 'sort_key'])
+    # Sort by start date first, then by our custom order
+    df = df.sort_values(['Start Date', 'Transition'])
+    
     positions = []
-    active_trainings = []  # List of end dates
+    active_end_dates = []  # Track end dates of active trainings
     
     for _, row in df.iterrows():
         start = row['Start Date']
         end = row['End Date']
         
-        # Find the first available position where there's no overlap
+        # Remove completed trainings from active list
+        active_end_dates = [e for e in active_end_dates if e >= start]
+        
+        # Find the first available position (0, 1, 2, ...)
         pos = 0
-        while True:
-            # Check if this position is available
-            available = True
-            for existing_end, existing_pos in active_trainings:
-                if existing_pos == pos and existing_end >= start:
-                    available = False
-                    break
-            
-            if available:
-                break
-            pos += 5
+        while pos in [i for i, e in enumerate(active_end_dates) if e >= start]:
+            pos += 1
         
         positions.append(pos)
-        
-        # Add to active trainings and clean up finished ones
-        active_trainings.append((end, pos))
-        active_trainings = [(e, p) for e, p in active_trainings if e >= start]
+        active_end_dates.insert(pos, end)  # Insert at the position we're using
     
     return positions
 
-priority_map = {t: i for i, t in enumerate(custom_order)}
-schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
-schedule_df = schedule_df.sort_values('sort_key')
+# Assign positions
 schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
-max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
-schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * 1 + 
-    schedule_df['Vertical Position'] * 0.15)
+# Create y-values: base position by transition type, plus offset for chronological stacking
+priority_map = {t: i for i, t in enumerate(custom_order)}
+schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
 
+# Y-value combines transition type and vertical position
+schedule_df['Y Value'] = (
+    schedule_df['sort_key'] * 1 +  # Base position for each transition type
+    schedule_df['Vertical Position'] * 0.2  # Offset for chronological stacking
+)
+
+# Prepare hover data
 schedule_df['Start Week'] = schedule_df['Week']
 schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
 
+# Create timeline plot
 fig = px.timeline(
     schedule_df,
     x_start="Start Date",
@@ -449,30 +449,28 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
-    #text="Num Trainees", # just for the pic
-    title="Training Schedule Projected Onto 2024")
-
-fig.update_yaxes(
-    #tickvals=list(range(len(custom_order))),
-    #ticktext=custom_order,
-    showgrid=False,
-    showticklabels=False,  # This ensures the transition labels are shown
-    # Remove numeric labels by hiding side ticks
-    side='right',        # Moves the labels to the right side (optional)
-    showline=False,      # Hides the axis line
-    ticks=''            # Hides the tick marks
+    title="Training Schedule Projected Onto 2024"
 )
+
+# Customize y-axis to show transition labels on the right
+fig.update_yaxes(
+    tickvals=sorted(schedule_df['sort_key'].unique()),  # One tick per transition type
+    ticktext=custom_order,                             # Our custom labels
+    showgrid=False,
+    side='right',                                      # Labels on right side
+    title=None                                         # Remove axis title
+)
+
+# Adjust layout
 fig.update_layout(
     height=600,
     xaxis_title="Timeline",
-    yaxis_title='Training Transition',
-    showlegend=True,
-    margin=dict(l=100, r=50, b=100, t=100),
-    plot_bgcolor='white')
-
-fig.update_traces(width=0.1,
-                  #textposition = 'inside',
-                  #textfont=dict(size = 12, color = 'white')
+    showlegend=False,                                  # We're using axis labels instead
+    margin=dict(l=50, r=150, b=100, t=100),           # More space on right for labels
+    plot_bgcolor='white'
 )
+
+# Adjust bar appearance
+fig.update_traces(width=0.2)
 
 st.plotly_chart(fig, use_container_width=True)
