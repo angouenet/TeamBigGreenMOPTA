@@ -389,41 +389,31 @@ custom_order = [
     'Boeing FO → Boeing C',
     'External Boeing FO → Boeing FO']
 
+# Assign vertical positions chronologically without overlaps
 def assign_vertical_positions(df):
-    # Create separate segments for each transition type
-    segment_spacing = 1.0  # Space between transition types
-    segment_base = {t: i * segment_spacing for i, t in enumerate(custom_order)}
+    # Sort by start date first, then by our custom order
+    df = df.sort_values(['Start Date', 'Transition'])
     
-    # Initialize tracking for each transition type
-    active_trainings = {t: [] for t in custom_order}
-    
-    # Sort by start date first
-    df = df.sort_values('Start Date')
     positions = []
+    active_end_dates = []  # Track end dates of active trainings
     
     for _, row in df.iterrows():
-        transition = row['Transition']
         start = row['Start Date']
         end = row['End Date']
         
-        # Clean up completed trainings for this transition type
-        active_trainings[transition] = [e for e in active_trainings[transition] if e >= start]
+        # Remove completed trainings from active list
+        active_end_dates = [e for e in active_end_dates if e >= start]
         
-        # Find first available position within this transition's segment
         pos = 0
-        while pos in [i for i, e in enumerate(active_trainings[transition]) if e >= start]:
+        while pos in [i for i, e in enumerate(active_end_dates) if e >= start]:
             pos += 1
         
-        # Calculate final y-value: segment base + position offset
-        y_value = segment_base[transition] + (pos * 0.2)
-        positions.append(y_value)
-        
-        # Add to active trainings for this transition
-        active_trainings[transition].insert(pos, end)
+        positions.append(pos)
+        active_end_dates.insert(pos, end)
     
     return positions
 
-schedule_df['Y Value'] = assign_vertical_positions(schedule_df)
+schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
 priority_map = {t: i for i, t in enumerate(custom_order)}
 schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
@@ -459,24 +449,27 @@ fig = px.timeline(
     title="Training Schedule Projected Onto 2024"
 )
 
-
-
-
 fig.update_yaxes(
-    tickvals=list(range(len(custom_order))),
-    ticktext=custom_order,
+    tickvals=sorted(schedule_df['sort_key'].unique()),
+    ticktext=custom_order,                     
     showgrid=False,
-    showticklabels=True,  # Show transition labels on left
+    showticklabels = False,
     side='left',
-    title_text="Training Transition"
-)
-
-fig.update_layout(
-    height=800,  # Increased height to accommodate spacing
-    yaxis_range=[-0.5, len(custom_order) * 1.5 - 0.5]  # Adjust y-axis range
+    title = True,                                     
+    title_text= "Training Transition"  
 )
 
 fig.update_traces(width=0.2)
+
+fig.update_layout(
+    height=600,
+    xaxis_title="Timeline",
+    showlegend=True,
+    margin=dict(l=50, r=150, b=100, t=100),
+    plot_bgcolor='white',
+    font=dict(color='white')
+)
+
 
 
 st.plotly_chart(fig, use_container_width=True)
