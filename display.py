@@ -405,8 +405,8 @@ schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 # Dynamic Y-axis spacing
 max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] +  # Base position
-    schedule_df['Vertical Position'] * 0.25  # Small offset only when needed
+    schedule_df['sort_key'] * .75 +  # Base position
+    schedule_df['Vertical Position'] * 0.2  # Small offset only when needed
 )
 
 schedule_df['Start Week'] = schedule_df['Week']
@@ -450,6 +450,6 @@ fig.update_layout(
 )
 
 # Consistent bar width
-fig.update_traces(width=0.25)
+fig.update_traces(width=0.2)
 
 st.plotly_chart(fig, use_container_width=True)
