@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import re
+from datetime import datetime, timedelta
 from alandata import load_data
 
 st.set_page_config(layout="wide")
@@ -345,8 +346,6 @@ schedule_df = schedule_df[[
 st.dataframe(schedule_df.sort_values('Week'))
 
 ### GANTT ###
-
-from datetime import datetime, timedelta
 
 start_date_2024 = datetime(2024, 1, 1)
 
