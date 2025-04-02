@@ -466,6 +466,7 @@ fig.update_layout(
     showlegend=True,
     margin=dict(l=50, r=150, b=100, t=100),
     plot_bgcolor='white'
+    font=dict(color='white')
 )
 
 fig.update_traces(width=0.2)
