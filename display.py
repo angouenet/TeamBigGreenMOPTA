@@ -443,11 +443,11 @@ fig.update_yaxes(
     ticktext=custom_order, 
     showgrid=True
 )
-"""
+
 fig.update_layout(
     annotations=[
         dict(
-            text="Number of Trainees in Each Bar",
+            text="Hover to View the Number of Trainees",
             x=0.5,  # Centered
             y=1.1,  # Slightly above the title
             xref="paper",
@@ -456,7 +456,8 @@ fig.update_layout(
             font=dict(size=14)
         )
     ]
-)"""
+)
+
 fig.update_layout(
     height=600,
     xaxis_title="Timeline",
@@ -465,4 +466,4 @@ fig.update_layout(
     margin=dict(l=100, r=50, b=100, t=100)
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig)
