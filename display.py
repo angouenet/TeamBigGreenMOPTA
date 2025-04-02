@@ -81,7 +81,6 @@ def process_dataframe(df):
 def create_stacked_qual_chart(df, title):
     melted_df = df.melt(id_vars=['Variable'], var_name='Week', value_name='Count')
 
-    # Extract week numbers and sort numerically
     melted_df['Week_Num'] = melted_df['Week'].str.extract('(\d+)').astype(int)
     melted_df = melted_df.sort_values('Week_Num')
     weeks = melted_df['Week'].unique()
@@ -92,7 +91,6 @@ def create_stacked_qual_chart(df, title):
     
     for qual in quals:
         qual_data = melted_df[melted_df['Variable'] == qual]
-        # Ensure data is in correct week order
         qual_data = qual_data.sort_values('Week_Num')
         fig.add_trace(go.Bar(
             x=weeks,
@@ -100,7 +98,6 @@ def create_stacked_qual_chart(df, title):
             name=qual,
             hoverinfo='y+name'))
     
-    # Customize x-axis to show only every 10th week
     fig.update_layout(
         barmode='stack',
         title=title,
@@ -110,8 +107,8 @@ def create_stacked_qual_chart(df, title):
         height=600,
         xaxis=dict(
             tickmode='array',
-            tickvals=[week for week in weeks if int(week.split()[-1]) % 10 == 0],  # Only weeks divisible by 10
-            ticktext=[f"Week {int(week.split()[-1])}" for week in weeks if int(week.split()[-1]) % 10 == 0]
+            tickvals=[week for week in weeks if int(week.split()[-1]) % 10 == 0],
+            ticktext=[f"{int(week.split()[-1])}" for week in weeks if int(week.split()[-1]) % 10 == 0]
         )
     )
     return fig
@@ -382,7 +379,7 @@ schedule_df = schedule_df[[
 st.dataframe(schedule_df.sort_values('Week'))
 
 ### GANTT ###
-# Calculate dates as before
+
 start_date_2024 = datetime(2024, 1, 1)
 
 def calculate_dates(row):
@@ -394,26 +391,22 @@ def calculate_dates(row):
 
 schedule_df[['Start Date', 'End Date']] = schedule_df.apply(calculate_dates, axis=1)
 
-# Define custom order for transitions
 custom_order = [
     'Boeing FO → Airbus FO',
     'Boeing C → Airbus C', 
     'Boeing FO → Boeing C',
     'External Boeing FO → Boeing FO']
 
-# Assign vertical positions chronologically without overlaps
 def assign_vertical_positions(df):
-    # Sort by start date first, then by our custom order
     df = df.sort_values(['Start Date', 'Transition'])
     
     positions = []
-    active_end_dates = []  # Track end dates of active trainings
+    active_end_dates = [] 
     
     for _, row in df.iterrows():
         start = row['Start Date']
         end = row['End Date']
         
-        # Remove completed trainings from active list
         active_end_dates = [e for e in active_end_dates if e >= start]
         
         pos = 0
@@ -435,11 +428,9 @@ schedule_df['Y Value'] = (
     schedule_df['Vertical Position'] * 0.25
 )
 
-# Prepare hover data
 schedule_df['Start Week'] = schedule_df['Week']
 schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
 
-# Create timeline plot
 fig = px.timeline(
     schedule_df,
     x_start="Start Date",
@@ -457,7 +448,6 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
-    #text = "Num Trainees",
     title="Training Schedule Projected Onto 2024"
 )
 
