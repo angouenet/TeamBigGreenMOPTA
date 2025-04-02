@@ -423,8 +423,8 @@ schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
 
 # Y-value combines transition type and vertical position
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * 1 +  # Base position for each transition type
-    schedule_df['Vertical Position'] * 0.2  # Offset for chronological stacking
+    schedule_df['sort_key'] * 0.75 +  # Base position for each transition type
+    schedule_df['Vertical Position'] * 0.25  # Offset for chronological stacking
 )
 
 # Prepare hover data
