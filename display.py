@@ -460,7 +460,7 @@ fig.update_yaxes(
     showticklabels = False,
     side='right',
     title = True,                                     
-    titletext="Training Transition"                                       # Remove axis title
+    title_text= "Training Transition"                                       # Remove axis title
 )
 
 # Adjust layout
