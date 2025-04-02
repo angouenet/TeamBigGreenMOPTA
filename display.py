@@ -457,6 +457,19 @@ fig.update_yaxes(
 )
 
 fig.update_layout(
+    annotations=[
+        dict(
+            text="Number of Trainees in Each Bar",
+            x=0.5,  # Centered
+            y=1.1,  # Slightly above the title
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+            font=dict(size=14)
+        )
+    ]
+)
+fig.update_layout(
     height=600,
     xaxis_title="Timeline",
     yaxis_title="Training Transition",
