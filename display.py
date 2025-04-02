@@ -242,7 +242,8 @@ def create_grounded_chart(allocation_dfs, demand_df):
         yaxis_title='Number of Grounded Aircraft',
         legend_title='Aircraft Type',
         hovermode='x unified',
-        height=500
+        height=500,
+        font = dict(size = 16)
     )
     
     return fig
@@ -437,6 +438,18 @@ fig.update_yaxes(
     tickvals=list(range(len(custom_order))),
     ticktext=custom_order,
     showgrid=True
+)
+
+fig.update_traces(
+    text=schedule_df['Num Trainees'].astype(str),
+    textposition='middle center',
+    textfont=dict(
+        color='white',
+        size=12,
+        family='Arial'
+    ),
+    width=0.4,
+    marker=dict(line=dict(width=0))
 )
 
 # Layout adjustments
