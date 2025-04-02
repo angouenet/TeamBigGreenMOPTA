@@ -455,8 +455,9 @@ fig = px.timeline(
 # Customize y-axis to show transition labels on the right
 fig.update_yaxes(
     tickvals=sorted(schedule_df['sort_key'].unique()),  # One tick per transition type
-    ticktext=custom_order,                             # Our custom labels
+    ticktext=custom_order,                            # Our custom labels
     showgrid=False,
+    showticklabels = False,
     side='right',                                      # Labels on right side
     title=None                                         # Remove axis title
 )
@@ -465,7 +466,7 @@ fig.update_yaxes(
 fig.update_layout(
     height=600,
     xaxis_title="Timeline",
-    showlegend=False,                                  # We're using axis labels instead
+    showlegend=True,                                  # We're using axis labels instead
     margin=dict(l=50, r=150, b=100, t=100),           # More space on right for labels
     plot_bgcolor='white'
 )
