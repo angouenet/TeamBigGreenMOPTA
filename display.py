@@ -69,7 +69,7 @@ def create_stacked_qual_chart(df, title):
     melted_df = df.melt(id_vars=['Variable'], var_name='Week', value_name='Count')
 
     weeks = sorted(melted_df['Week'].unique(), key=lambda x: int(x.split()[-1]))
-    quals = ["Qualification 0", "Qualification 1", "Qualification 2", "Qualification 3"] # Omit "External Hire" - It's in training gantt
+    quals = ["Qualification 0", "Qualification 1", "Qualification 2", "Qualification 3", "External Hire"] # Omit "External Hire" - It's in training gantt
     
     fig = go.Figure()
     
@@ -459,7 +459,7 @@ fig.update_layout(
 )
 
 fig.update_layout(
-    height=600,
+    height=800,
     xaxis_title="Timeline",
     yaxis_title="Training Transition",
     showlegend=True,
