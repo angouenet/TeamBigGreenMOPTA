@@ -405,8 +405,8 @@ def assign_vertical_positions(df):
 schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * 1.5 + 
-    schedule_df['Vertical Position'] * 0.5
+    schedule_df['sort_key'] * 1.2 + 
+    schedule_df['Vertical Position'] * 0.4
 )
 
 transition_types = schedule_df['Transition'].unique()
@@ -466,4 +466,4 @@ fig.update_layout(
     margin=dict(l=100, r=50, b=100, t=100)
 )
 
-st.plotly_chart(fig)
+st.plotly_chart(fig, use_container_width=True, config={'staticPlot': False})
