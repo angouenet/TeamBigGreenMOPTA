@@ -409,7 +409,7 @@ def assign_vertical_positions(df):
             
             if available:
                 break
-            pos += 1
+            pos += 5
         
         positions.append(pos)
         
