@@ -458,7 +458,7 @@ fig.update_yaxes(
     ticktext=custom_order,                            # Our custom labels
     showgrid=False,
     showticklabels = False,
-    side='right',
+    side='left',
     title = True,                                     
     title_text= "Training Transition"                                       # Remove axis title
 )
