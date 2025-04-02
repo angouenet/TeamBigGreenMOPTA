@@ -3,28 +3,37 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import re
+import os
 from datetime import datetime, timedelta
 from alandata import load_data
 
 st.set_page_config(layout="wide")
+st.header("Optimization Results")
 
 alandata = load_data()
 crew_demand = alandata["crew_demand"]
 
 folder_path = "results_output/"
-excel_files = [
-    "pilot_output.xlsx",
-    "baseline_pilot_output.xlsx",
-    "optimization_results2.xlsx",
-    "optimization_results3.xlsx"
+baseline_file = "baseline_pilot_output.xlsx"
+
+pilot_files = [
+    f for f in os.listdir(folder_path) 
+    if f.startswith("pilot_output_") and f.endswith(".xlsx")
 ]
 
-excel_file_paths = [folder_path + file for file in excel_files]
-display_names = ["Old Pilot Output", "Basline Pilot Output", "Optimization Result 3", "Optimization Result 4"]
+excel_files = [baseline_file] + sorted(pilot_files)
+
+display_names = ["Baseline"]
+for file in pilot_files:
+    parts = file.replace("pilot_output_", "").replace(".xlsx", "").split("_")
+    grounding_coeff, hire_cost = parts[0], parts[1]
+    display_names.append(f"Training (Grounding Coefficient={grounding_coeff}, External Cost={float(hire_cost):,.0f})")
+
+
+excel_file_paths = [os.path.join(folder_path, file) for file in excel_files]
 
 file_map = dict(zip(display_names, excel_file_paths))
 selected_display_name = st.selectbox("Select the Excel File", display_names)
-
 selected_file = file_map[selected_display_name]
 
 xls = pd.ExcelFile(selected_file)
@@ -130,7 +139,7 @@ airbus_demand = demand_wide[['Week', 'Airbus_Demand']].rename(columns={'Airbus_D
 
 ### FO ###
 
-st.header("First Officer Data")
+st.header("First Officer Analysis")
 fo_tab1, fo_tab2, fo_tab3, fo_tab4 = st.tabs([
     "Boeing Qualifications", 
     "Airbus Qualifications",
@@ -163,7 +172,7 @@ with fo_tab4:
     st.plotly_chart(fig, use_container_width=True)
 
 ### Captain ###
-st.header("Captain Data")
+st.header("Captain Analysis")
 cap_tab1, cap_tab2, cap_tab3, cap_tab4 = st.tabs([
     "Boeing Qualifications", 
     "Airbus Qualifications",
@@ -197,6 +206,7 @@ with cap_tab4:
 
 
 ### Grounded Aircraft ###
+
 
 
 def create_grounded_chart(allocation_dfs, demand_df):
@@ -243,8 +253,17 @@ def create_grounded_chart(allocation_dfs, demand_df):
         legend_title='Aircraft Type',
         hovermode='x unified',
         height=500,
-        font = dict(size = 16)
-    )
+        title_font=dict(size=20),
+        font=dict(size=14),
+        legend=dict(
+            title_font=dict(size=16),
+            font=dict(size=14)),
+        xaxis=dict(
+            title_font=dict(size=16),
+            tickfont=dict(size=14)),
+        yaxis=dict(
+            title_font=dict(size=16),
+            tickfont=dict(size=14)))
     
     return fig
 
@@ -268,15 +287,7 @@ grouped_training.rename(columns={"Week": "Duration"}, inplace=True)
 
 category_training = alandata["training_types"]
 
-st.header("Training Data Tables")
-
-col1, col2 = st.columns(2)
-with col1:
-    st.subheader("Training Duration")
-    st.dataframe(grouped_training)
-with col2:
-    st.subheader("Training Types")
-    st.dataframe(category_training)
+st.header("Training Data")
 
 def parse_training_data(file_path):
     trainings = []  # U
@@ -311,18 +322,30 @@ def parse_training_data(file_path):
 
 
 folder_path = "results_output/"
-txt_files = [
-    "training_output.txt",
-    "baseline_training_output.txt",
-    "optimization_results2.xlsx",
-    "optimization_results3.xlsx"
-]
 
-txt_file_paths = [folder_path + file for file in txt_files]
-txt_names = ["Old Training Output", "Basline Training Output", "Optimization Result 3", "Optimization Result 4"]
+training_files = []
+display_names = []
 
-txt_map = dict(zip(txt_names, txt_file_paths))
-txt_display_name = st.selectbox("Select the TXT File", txt_names)
+baseline_file = "baseline_training_output.txt"
+training_files.append(baseline_file)
+display_names.append("Baseline Training Output")
+
+for file in os.listdir(folder_path):
+    if file.startswith("training_output_") and file.endswith(".txt"):
+        # Extract parameters
+        params = file.replace("training_output_", "").replace(".txt", "").split("_")
+        if len(params) == 2:  # Ensure format is correct
+            grounding_coeff, hire_cost = params[0], params[1]
+            training_files.append(file)
+            display_names.append(f"Training (Grounding Coefficient={grounding_coeff}, External Cost={float(hire_cost):,.0f})")
+
+txt_map = dict(zip(display_names, [os.path.join(folder_path, f) for f in training_files]))
+
+if "training_output.txt" in os.listdir(folder_path):
+    old_training_entry = {"Old Training Output": os.path.join(folder_path, "training_output.txt")}
+    txt_map = {**old_training_entry, **txt_map}
+
+txt_display_name = st.selectbox("Select the TXT File", list(txt_map.keys()))
 selected_txt_file = txt_map[txt_display_name]
 
 training_df, trainee_df = parse_training_data(selected_txt_file)
@@ -348,7 +371,6 @@ st.dataframe(schedule_df.sort_values('Week'))
 
 ### GANTT ###
 
-# Calculate dates (your existing code)
 start_date_2024 = datetime(2024, 1, 1)
 
 def calculate_dates(row):
@@ -360,7 +382,6 @@ def calculate_dates(row):
 
 schedule_df[['Start Date', 'End Date']] = schedule_df.apply(calculate_dates, axis=1)
 
-# Custom ordering
 custom_order = [
     'Boeing FO → Airbus FO',
     'Boeing C → Airbus C', 
@@ -368,7 +389,6 @@ custom_order = [
     'External Boeing FO → Boeing FO'
 ]
 
-# Vertical positioning algorithm (optimized)
 def assign_vertical_positions(df):
     df = df.sort_values(['sort_key', 'Start Date'])
     positions = []
@@ -382,7 +402,6 @@ def assign_vertical_positions(df):
         if transition not in active_trainings:
             active_trainings[transition] = []
         
-        # Find first available position (0 if no overlap)
         pos = 0
         for existing_end in sorted(active_trainings[transition]):
             if existing_end < start:
@@ -392,28 +411,24 @@ def assign_vertical_positions(df):
         positions.append(pos)
         active_trainings[transition].append(end)
         
-        # Clean up finished trainings
         active_trainings[transition] = [e for e in active_trainings[transition] if e >= start]
     
     return positions
 
-# Apply positioning
 priority_map = {t: i for i, t in enumerate(custom_order)}
 schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
 schedule_df = schedule_df.sort_values('sort_key')
 schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
-# Dynamic Y-axis spacing
 max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * .9 +  # Base position
-    schedule_df['Vertical Position'] * 0.3  # Small offset only when needed
+    schedule_df['sort_key'] * .9 + 
+    schedule_df['Vertical Position'] * 0.3
 )
 
 schedule_df['Start Week'] = schedule_df['Week']
 schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
 
-# Visualization
 fig = px.timeline(
     schedule_df,
     x_start="Start Date",
@@ -426,13 +441,15 @@ fig = px.timeline(
         "Start Week": True,
         "End Week": True,
         "Duration": True,
-        "Num Trainees": True
+        "Num Trainees": True,
+        "Start Date": False,
+        "End Date": False,
+        "Y Value": False
     },
-
+    #text="Num Trainees", # just for the pic
     title="Training Schedule Projected Onto 2024"
 )
 
-# Y-axis configuration
 fig.update_yaxes(
     autorange="reversed",
     tickvals=list(range(len(custom_order))),
@@ -440,8 +457,6 @@ fig.update_yaxes(
     showgrid=True
 )
 
-
-# Layout adjustments
 fig.update_layout(
     height=600,
     xaxis_title="Timeline",
@@ -451,7 +466,10 @@ fig.update_layout(
     plot_bgcolor='white'
 )
 
-# Consistent bar width
-fig.update_traces(width=0.2)
+fig.update_traces(width=0.2,
+                  textposition = 'inside',
+                  textfont=dict(size = 12, color = 'white')
+                  )
+
 
 st.plotly_chart(fig, use_container_width=True)
