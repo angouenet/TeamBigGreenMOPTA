@@ -437,25 +437,13 @@ fig = px.timeline(
     #subtitle="Number of Trainees in Each Bar"
 )
 
-fig.update_traces(
-    text = schedule_df['Num Trainees'].astype(int).astype(str),
-    textposition = 'inside',
-    textangle=0,
-    textfont=dict(
-        color='white',
-        size=12
-    ),
-    width=0.25,
-    marker_line_width=0
-)
-
 fig.update_yaxes(
     autorange="reversed",
     tickvals=[i * 1.5 for i in range(len(custom_order))], 
     ticktext=custom_order, 
     showgrid=True
 )
-
+"""
 fig.update_layout(
     annotations=[
         dict(
@@ -468,7 +456,7 @@ fig.update_layout(
             font=dict(size=14)
         )
     ]
-)
+)"""
 fig.update_layout(
     height=600,
     xaxis_title="Timeline",
