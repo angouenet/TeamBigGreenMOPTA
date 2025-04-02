@@ -64,20 +64,31 @@ def process_dataframe(df):
     return filtered_df
 
 def create_stacked_qual_chart(df, title):
+
     melted_df = df.melt(id_vars=['Variable'], var_name='Week', value_name='Count')
-    fig = px.bar(melted_df, 
-                x='Week', 
-                y='Count', 
-                color='Variable',
-                title=title,
-                barmode='stack',
-                category_orders={"Variable": ["Qualification 0", "Qualification 1", 
-                                            "Qualification 2", "Qualification 3", "External Hire"]})
+
+    weeks = sorted(melted_df['Week'].unique(), key=lambda x: int(x.split()[-1]))
+    quals = ["Qualification 0", "Qualification 1", "Qualification 2", "Qualification 3"] # Omit "External Hire" - It's in training gantt
+    
+    fig = go.Figure()
+    
+    for qual in quals:
+        qual_data = melted_df[melted_df['Variable'] == qual]
+        fig.add_trace(go.Bar(
+            x=weeks,
+            y=[qual_data[qual_data['Week'] == week]['Count'].sum() for week in weeks],
+            name=qual,
+            hoverinfo='y+name'
+        ))
+    
     fig.update_layout(
+        barmode='stack',
+        title=title,
         xaxis_title='Week',
         yaxis_title='Number of Crew',
         legend_title='Qualification Level',
-        height=600)
+        height=600
+    )
     return fig
 
 def create_total_vs_demand_chart(allocation_df, demand_df, title):
@@ -424,11 +435,11 @@ fig = px.timeline(
         "Y Value": False
     },
     title="Training Schedule Projected Onto 2024",
-    subtitle="Number of Trainees in Each Bar"
+    #subtitle="Number of Trainees in Each Bar"
 )
 
 fig.update_traces(
-    text = schedule_df['Num Trainees'].astype(str),
+    text = schedule_df['Num Trainees'].astype(int).astype(str),
     textposition = 'inside',
     textangle=0,
     textfont=dict(
