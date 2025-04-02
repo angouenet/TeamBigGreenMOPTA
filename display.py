@@ -409,6 +409,9 @@ schedule_df['Y Value'] = (
     schedule_df['Vertical Position'] * 0.2  # Small offset only when needed
 )
 
+schedule_df['Start Week'] = schedule_df['Week']
+schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
+
 # Visualization
 fig = px.timeline(
     schedule_df,
@@ -424,6 +427,7 @@ fig = px.timeline(
         "Duration": True,
         "Num Trainees": True
     },
+
     title="Training Schedule Projected Onto 2024"
 )
 
