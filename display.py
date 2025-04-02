@@ -459,7 +459,16 @@ fig.update_yaxes(
     title_text= "Training Transition"  
 )
 
-fig.update_traces(width=0.2)
+#fig.update_traces(width=0.2)
+
+fig.update_traces(
+    width=0.2,
+    textposition='inside',
+    textfont=dict(
+        color='white',
+        size=12
+    )
+)
 
 fig.update_layout(
     height=600,
@@ -467,7 +476,6 @@ fig.update_layout(
     showlegend=True,
     margin=dict(l=50, r=150, b=100, t=100),
     plot_bgcolor='white',
-    font=dict(color='white')
 )
 
 
