@@ -18,8 +18,7 @@ baseline_file = "baseline_pilot_output.xlsx"
 
 pilot_files = [
     f for f in os.listdir(folder_path) 
-    if f.startswith("pilot_output_") and f.endswith(".xlsx")
-]
+    if f.startswith("pilot_output_") and f.endswith(".xlsx")]
 
 #Sorted
 
@@ -51,8 +50,7 @@ name_mapping = {
     'FO_Boeing': 'Boeing First Officer',
     'FO_Airbus': 'Airbus First Officer',
     'C_Boeing': 'Boeing Captain',
-    'C_Airbus': 'Airbus Captain'
-}
+    'C_Airbus': 'Airbus Captain'}
 
 pretty_results = {name_mapping[key]: df for key, df in optimization_results.items()}
 
@@ -95,8 +93,7 @@ def create_stacked_qual_chart(df, title):
             x=weeks,
             y=[qual_data[qual_data['Week'] == week]['Count'].sum() for week in weeks],
             name=qual,
-            hoverinfo='y+name'
-        ))
+            hoverinfo='y+name'))
     
     fig.update_layout(
         barmode='stack',
@@ -104,8 +101,7 @@ def create_stacked_qual_chart(df, title):
         xaxis_title='Week',
         yaxis_title='Number of Crew',
         legend_title='Qualification Level',
-        height=600
-    )
+        height=600)
     return fig
 
 def create_total_vs_demand_chart(allocation_df, demand_df, title):
@@ -151,19 +147,18 @@ fo_tab1, fo_tab2, fo_tab3, fo_tab4 = st.tabs([
     "Boeing Qualifications", 
     "Airbus Qualifications",
     "Boeing vs Demand",
-    "Airbus vs Demand"
-])
+    "Airbus vs Demand"])
 
 with fo_tab1:
     processed_df = process_dataframe(pretty_results['Boeing First Officer'])
     st.dataframe(processed_df)
-    fig = create_stacked_qual_chart(processed_df, "Boeing FO: Qualification Over Time")
+    fig = create_stacked_qual_chart(processed_df, "Boeing FO: Cohort Eligible to Fly per Week")
     st.plotly_chart(fig, use_container_width=True)
 
 with fo_tab2:
     processed_df = process_dataframe(pretty_results['Airbus First Officer'])
     st.dataframe(processed_df)
-    fig = create_stacked_qual_chart(processed_df, "Airbus FO: Qualification Over Time")
+    fig = create_stacked_qual_chart(processed_df, "Airbus FO: Cohort Eligible to Fly per Week")
     st.plotly_chart(fig, use_container_width=True)
 
 with fo_tab3:
@@ -184,19 +179,18 @@ cap_tab1, cap_tab2, cap_tab3, cap_tab4 = st.tabs([
     "Boeing Qualifications", 
     "Airbus Qualifications",
     "Boeing vs Demand",
-    "Airbus vs Demand"
-])
+    "Airbus vs Demand"])
 
 with cap_tab1:
     processed_df = process_dataframe(pretty_results['Boeing Captain'])
     st.dataframe(processed_df)
-    fig = create_stacked_qual_chart(processed_df, "Boeing Captain: Qualification Over Time")
+    fig = create_stacked_qual_chart(processed_df, "Boeing Captain: Cohort Eligible to Fly per Week")
     st.plotly_chart(fig, use_container_width=True)
 
 with cap_tab2:
     processed_df = process_dataframe(pretty_results['Airbus Captain'])
     st.dataframe(processed_df)
-    fig = create_stacked_qual_chart(processed_df, "Airbus Captain: Qualification Over Time")
+    fig = create_stacked_qual_chart(processed_df, "Airbus Captain: Cohort Eligible to Fly per Week")
     st.plotly_chart(fig, use_container_width=True)
 
 with cap_tab3:
@@ -221,8 +215,7 @@ def create_grounded_chart(allocation_dfs, demand_df):
     
     for aircraft_type, df in allocation_dfs.items():
         alloc = df.rename(columns={
-            col: col.replace('Week ', '') for col in df.columns if col.startswith('Week ')
-        })
+            col: col.replace('Week ', '') for col in df.columns if col.startswith('Week ')})
         
         total_alloc = alloc.drop(columns=['Variable']).sum().reset_index()
         total_alloc.columns = ['Week', 'Total_Allocation']
@@ -251,8 +244,7 @@ def create_grounded_chart(allocation_dfs, demand_df):
                  labels={'Shortages': 'Number of Grounded Aircraft'},
                  color_discrete_map={
                      'Boeing': '#636EFA',
-                     'Airbus': '#00CC96'
-                 })
+                     'Airbus': '#00CC96'})
     
     fig.update_layout(
         xaxis_title='Week',
@@ -280,8 +272,7 @@ allocation_dfs = {
     'Boeing': process_dataframe(pretty_results['Boeing First Officer']),
     'Boeing': process_dataframe(pretty_results['Boeing Captain']),
     'Airbus': process_dataframe(pretty_results['Airbus Captain']),
-    'Airbus': process_dataframe(pretty_results['Airbus First Officer'])
-}
+    'Airbus': process_dataframe(pretty_results['Airbus First Officer'])}
 
 grounded_fig = create_grounded_chart(allocation_dfs, demand_wide)
 st.markdown("### Hover for more information!")
@@ -313,8 +304,7 @@ def parse_training_data(file_path):
                     trainings.append({
                         'Week': week,
                         'Training Type': training_type,
-                        'Num Trainings': num_trainings
-                    })
+                        'Num Trainings': num_trainings})
             elif line.startswith('x['):
                 match = re.match(r'x\[(\d+),\s*(\d+)\]\s+([\d.]+)', line)
                 if match:
@@ -324,10 +314,8 @@ def parse_training_data(file_path):
                     trainees.append({
                         'Week': week,
                         'Training Type': training_type,
-                        'Num Trainees': num_trainees
-                    })
+                        'Num Trainees': num_trainees})
     return pd.DataFrame(trainings), pd.DataFrame(trainees)
-
 
 folder_path = "results_output/"
 
@@ -377,8 +365,7 @@ schedule_df = training_df.merge(trainee_df, on=['Week', 'Training Type'], how='l
 schedule_df['Transition'] = schedule_df['Start Crew Type'] + " → " + schedule_df['End Crew Type']
 
 schedule_df = schedule_df[[
-    'Week', 'Training Type', 'Duration', 'Num Trainings', 'Num Trainees', 'Transition'
-]]
+    'Week', 'Training Type', 'Duration', 'Num Trainings', 'Num Trainees', 'Transition']]
 
 st.dataframe(schedule_df.sort_values('Week'))
 
@@ -399,33 +386,26 @@ custom_order = [
     'Boeing FO → Airbus FO',
     'Boeing C → Airbus C', 
     'Boeing FO → Boeing C',
-    'External Boeing FO → Boeing FO'
-]
+    'External Boeing FO → Boeing FO']
 
 def assign_vertical_positions(df):
     df = df.sort_values(['sort_key', 'Start Date'])
     positions = []
     active_trainings = {}  # {transition: [end_dates]}
-    
     for _, row in df.iterrows():
         start = row['Start Date']
         end = row['End Date']
         transition = row['Transition']
-        
         if transition not in active_trainings:
             active_trainings[transition] = []
-        
         pos = 0
         for existing_end in sorted(active_trainings[transition]):
             if existing_end < start:
                 break
             pos += 1
-        
         positions.append(pos)
         active_trainings[transition].append(end)
-        
         active_trainings[transition] = [e for e in active_trainings[transition] if e >= start]
-    
     return positions
 
 priority_map = {t: i for i, t in enumerate(custom_order)}
@@ -436,8 +416,7 @@ schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
 schedule_df['Y Value'] = (
     schedule_df['sort_key'] * .9 + 
-    schedule_df['Vertical Position'] * 0.3
-)
+    schedule_df['Vertical Position'] * 0.3)
 
 schedule_df['Start Week'] = schedule_df['Week']
 schedule_df['End Week'] = schedule_df['Week'] + schedule_df['Duration'] - 1
@@ -459,16 +438,14 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
-    #text="Num Trainees", # just for the pic
-    title="Training Schedule Projected Onto 2024"
-)
+    text="Num Trainees", # just for the pic
+    title="Training Schedule Projected Onto 2024")
 
 fig.update_yaxes(
     autorange="reversed",
     tickvals=list(range(len(custom_order))),
     ticktext=custom_order,
-    showgrid=True
-)
+    showgrid=True)
 
 fig.update_layout(
     height=600,
@@ -476,13 +453,10 @@ fig.update_layout(
     yaxis_title="Training Transition",
     showlegend=True,
     margin=dict(l=100, r=50, b=100, t=100),
-    plot_bgcolor='white'
-)
+    plot_bgcolor='white')
 
 fig.update_traces(width=0.2,
                   textposition = 'inside',
-                  textfont=dict(size = 12, color = 'white')
-                  )
-
+                  textfont=dict(size = 12, color = 'white'))
 
 st.plotly_chart(fig, use_container_width=True)
