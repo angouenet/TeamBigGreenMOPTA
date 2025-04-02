@@ -405,8 +405,8 @@ schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 # Dynamic Y-axis spacing
 max_positions = schedule_df.groupby('Transition')['Vertical Position'].max()
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] +  # Base position
-    schedule_df['Vertical Position'] * 0.2  # Small offset only when needed
+    schedule_df['sort_key'] * 1.5 +  # Base position
+    schedule_df['Vertical Position'] * 0.5  # Small offset only when needed
 )
 
 schedule_df['Start Week'] = schedule_df['Week']
