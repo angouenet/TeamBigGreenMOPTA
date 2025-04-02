@@ -263,6 +263,7 @@ def create_grounded_chart(allocation_dfs, demand_df):
         legend_title='Aircraft Type',
         hovermode='x unified',
         height=500,
+        title_x=0.5,
         title_font=dict(size=20),
         font=dict(size=14),
         legend=dict(
@@ -273,8 +274,7 @@ def create_grounded_chart(allocation_dfs, demand_df):
             tickfont=dict(size=14)),
         yaxis=dict(
             title_font=dict(size=16),
-            tickfont=dict(size=14))),
-        title_x=0.5
+            tickfont=dict(size=14)))
     return fig
 
 st.header("Grounded Aircraft Analysis")
