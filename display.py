@@ -404,24 +404,20 @@ def assign_vertical_positions(df):
         # Remove completed trainings from active list
         active_end_dates = [e for e in active_end_dates if e >= start]
         
-        # Find the first available position (0, 1, 2, ...)
         pos = 0
         while pos in [i for i, e in enumerate(active_end_dates) if e >= start]:
             pos += 1
         
         positions.append(pos)
-        active_end_dates.insert(pos, end)  # Insert at the position we're using
+        active_end_dates.insert(pos, end)
     
     return positions
 
-# Assign positions
 schedule_df['Vertical Position'] = assign_vertical_positions(schedule_df)
 
-# Create y-values: base position by transition type, plus offset for chronological stacking
 priority_map = {t: i for i, t in enumerate(custom_order)}
 schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
 
-# Y-value combines transition type and vertical position
 schedule_df['Y Value'] = (
     schedule_df['sort_key'] * 1 +  # Base position for each transition type
     schedule_df['Vertical Position'] * 0.25  # Offset for chronological stacking
@@ -449,30 +445,29 @@ fig = px.timeline(
         "End Date": False,
         "Y Value": False
     },
+    text = "Num Trainees"
     title="Training Schedule Projected Onto 2024"
 )
 
-# Customize y-axis to show transition labels on the right
 fig.update_yaxes(
-    tickvals=sorted(schedule_df['sort_key'].unique()),  # One tick per transition type
-    ticktext=custom_order,                            # Our custom labels
+    tickvals=sorted(schedule_df['sort_key'].unique()),
+    ticktext=custom_order,                     
     showgrid=False,
     showticklabels = False,
     side='left',
     title = True,                                     
-    title_text= "Training Transition"                                       # Remove axis title
+    title_text= "Training Transition"  
 )
 
-# Adjust layout
+
 fig.update_layout(
     height=600,
     xaxis_title="Timeline",
-    showlegend=True,                                  # We're using axis labels instead
-    margin=dict(l=50, r=150, b=100, t=100),           # More space on right for labels
+    showlegend=True,
+    margin=dict(l=50, r=150, b=100, t=100),
     plot_bgcolor='white'
 )
 
-# Adjust bar appearance
 fig.update_traces(width=0.2)
 
 st.plotly_chart(fig, use_container_width=True)
