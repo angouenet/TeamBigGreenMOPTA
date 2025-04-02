@@ -440,17 +440,6 @@ fig.update_yaxes(
     showgrid=True
 )
 
-fig.update_traces(
-    text=schedule_df['Num Trainees'].astype(str),
-    textposition='middle center',
-    textfont=dict(
-        color='white',
-        size=12,
-        family='Arial'
-    ),
-    width=0.4,
-    marker=dict(line=dict(width=0))
-)
 
 # Layout adjustments
 fig.update_layout(
