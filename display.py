@@ -281,7 +281,7 @@ allocation_dfs = {
     'Airbus': process_dataframe(pretty_results['Airbus First Officer'])}
 
 grounded_fig = create_grounded_chart(allocation_dfs, demand_wide)
-st.markdown("# Hover for more information!")
+st.markdown("<h3 style='font-size: 14px;'>Hover for more information!</h3>", unsafe_allow_html=True)
 st.plotly_chart(grounded_fig, use_container_width=True)
 
 ### Training Data ###
