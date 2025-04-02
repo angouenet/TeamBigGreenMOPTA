@@ -79,29 +79,41 @@ def process_dataframe(df):
     return filtered_df
 
 def create_stacked_qual_chart(df, title):
-
     melted_df = df.melt(id_vars=['Variable'], var_name='Week', value_name='Count')
 
-    weeks = sorted(melted_df['Week'].unique(), key=lambda x: int(x.split()[-1]))
-    quals = ["Qualification 0", "Qualification 1", "Qualification 2", "Qualification 3"] # Omit "External Hire" - It's in training gantt
+    # Extract week numbers and sort numerically
+    melted_df['Week_Num'] = melted_df['Week'].str.extract('(\d+)').astype(int)
+    melted_df = melted_df.sort_values('Week_Num')
+    weeks = melted_df['Week'].unique()
+    
+    quals = ["Qualification 0", "Qualification 1", "Qualification 2", "Qualification 3"] # Omit "External Hire"
     
     fig = go.Figure()
     
     for qual in quals:
         qual_data = melted_df[melted_df['Variable'] == qual]
+        # Ensure data is in correct week order
+        qual_data = qual_data.sort_values('Week_Num')
         fig.add_trace(go.Bar(
             x=weeks,
-            y=[qual_data[qual_data['Week'] == week]['Count'].sum() for week in weeks],
+            y=qual_data['Count'],
             name=qual,
             hoverinfo='y+name'))
     
+    # Customize x-axis to show only every 10th week
     fig.update_layout(
         barmode='stack',
         title=title,
         xaxis_title='Week',
         yaxis_title='Number of Crew',
         legend_title='Qualification Level',
-        height=600)
+        height=600,
+        xaxis=dict(
+            tickmode='array',
+            tickvals=[week for week in weeks if int(week.split()[-1]) % 10 == 0],  # Only weeks divisible by 10
+            ticktext=[f"Week {int(week.split()[-1])}" for week in weeks if int(week.split()[-1]) % 10 == 0]
+        )
+    )
     return fig
 
 def create_total_vs_demand_chart(allocation_df, demand_df, title):
@@ -419,8 +431,8 @@ priority_map = {t: i for i, t in enumerate(custom_order)}
 schedule_df['sort_key'] = schedule_df['Transition'].map(priority_map)
 
 schedule_df['Y Value'] = (
-    schedule_df['sort_key'] * 1 +  # Base position for each transition type
-    schedule_df['Vertical Position'] * 0.25  # Offset for chronological stacking
+    schedule_df['sort_key'] * 1 + 
+    schedule_df['Vertical Position'] * 0.25
 )
 
 # Prepare hover data
