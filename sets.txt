@@ -1,0 +1,71 @@
+! Sets.ams - Declare all sets
+
+Set W {
+    IndexDomain: Integers;
+    Elements: {1..52};
+}
+
+Set W0 {
+    IndexDomain: Integers;
+    Elements: {0};
+}
+
+Set Wend {
+    IndexDomain: Integers;
+    Elements: {1..53};
+}
+
+Set Wall {
+    IndexDomain: Integers;
+    Elements: {0..53};
+}
+
+Set tau {
+    IndexDomain: Integers;
+    Elements: {1,2,3,4,5};
+}
+
+Set tau_int {
+    IndexDomain: tau;
+    Elements: {1,2,3};
+}
+
+Set tau_ext {
+    IndexDomain: tau;
+    Elements: {4,5};
+}
+
+Set rho {
+    IndexDomain: String;
+    Elements: {"FO", "C"};
+}
+
+Set A {
+    IndexDomain: String;
+    Elements: {"Boeing", "Airbus"};
+}
+
+Set Qall {
+    IndexDomain: Integers;
+    Elements: {0,1,2,3};
+}
+
+Set Qunqual {
+    IndexDomain: Integers;
+    Elements: {0};
+}
+
+Set Qqual {
+    IndexDomain: Integers;
+    Elements: {1,2,3};
+}
+
+Set Qext {
+    IndexDomain: Integers;
+    Elements: {4};
+}
+
+Set G {
+    IndexDomain: Integers;
+    Elements: {0..13};
+}
