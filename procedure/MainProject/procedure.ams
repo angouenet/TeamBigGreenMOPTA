@@ -1,0 +1,573 @@
+## ams_version=1.0
+
+Model Main_procedure {
+	Set CrewRatings {
+		Index: c;
+		Comment: "data import";
+	}
+	Set CrewTypes {
+		Index: rho;
+		Definition: {
+			{'FO', 'C', 'External'}
+		}
+	}
+	Set AircraftTypes {
+		Index: a;
+		Definition: {
+			{'Boeing', 'Airbus'}
+		}
+	}
+	Set SimulatorWeeks {
+		Index: s;
+		Comment: "data import";
+	}
+	Set Weeks {
+		Index: w;
+	}
+	Set WeeksStart {
+		SubsetOf: Weeks;
+		Index: w_start;
+		Definition: {
+			{1}
+		}
+	}
+	Set WeeksEnd {
+		SubsetOf: Weeks;
+		Index: w_end;
+		Definition: {
+			{52}
+		}
+	}
+	Set WeeksAll {
+		Index: w_all;
+		Definition: {
+			{1 .. 52}
+		}
+	}
+	Set WeeksWithEnd {
+		Index: w_with_end;
+		Definition: {
+			{1 .. 52}
+		}
+	}
+	Set Qualifications {
+		SubsetOf: QualificationsAll;
+		Index: q;
+		Definition: {
+			{0 .. 3}
+		}
+	}
+	Set QualificationsUnqual {
+		SubsetOf: Qualifications;
+		Index: q_unqual;
+		Definition: {
+			{0}
+		}
+	}
+	Set QualificationsQual {
+		SubsetOf: Qualifications;
+		Index: q_qual;
+		Definition: {
+			{1 .. 3}
+		}
+	}
+	Set QualificationsExt {
+		Index: q_ext;
+		Definition: {
+			{4}
+		}
+	}
+	Set QualificationsAll {
+		Index: q_all;
+		Definition: {
+			{0 .. 4}
+		}
+	}
+	Set QualificationsTrainee {
+		Index: q_trainee;
+		Definition: {
+			{0 .. 4}
+		}
+	}
+	Set TrainingTypes {
+		Index: tau;
+		Comment: "import data";
+	}
+	Set TrainingTypesInternal {
+		SubsetOf: TrainingTypes;
+		Index: tau_internal;
+		Definition: {
+			{1,2,3}
+		}
+	}
+	Set TrainingTypesExternal {
+		SubsetOf: TrainingTypes;
+		Index: tau_external;
+		Definition: {
+			{4,5}
+		}
+	}
+	Set GroundingLevels {
+		Index: g;
+		Definition: {
+			{0 .. 10}
+		}
+	}
+	Index i_weeks {
+		Range: Weeks;
+	}
+	Index i_qualifications {
+		Range: Qualifications;
+	}
+	Index i_trainingtypes {
+		Range: TrainingTypes;
+	}
+	Index i_aircraft {
+		Range: AircraftTypes;
+	}
+	Index i_crewtypes {
+		Range: CrewTypes;
+	}
+	Parameter C_0 {
+		IndexDomain: [a,rho];
+		Range: nonnegative;
+		Comment: "Initial Crew Availability";
+	}
+	Parameter instructor_need {
+		IndexDomain: [w,tau,q];
+	}
+	Parameter Deltaa {
+		IndexDomain: (w,a);
+		Range: nonnegative;
+	}
+	Parameter crewleaving {
+		IndexDomain: [w,a,rho,q];
+		Range: nonnegative;
+	}
+	Parameter xi {
+		IndexDomain: w;
+	}
+	Parameter sigma {
+		IndexDomain: [w,tau];
+	}
+	Parameter l_t {
+		IndexDomain: tau;
+	}
+	Parameter kappa {
+		IndexDomain: [w,tau];
+	}
+	Parameter zeta {
+		IndexDomain: [w,g];
+	}
+	Parameter beta_start {
+		IndexDomain: [tau,rho,a];
+		Range: binary;
+	}
+	Parameter beta_end {
+		IndexDomain: [tau,rho,a];
+		Range: binary;
+	}
+	Parameter lambda_ {
+		IndexDomain: tau;
+	}
+	Parameter c_52 {
+		IndexDomain: [a,rho];
+		Definition: {
+			if (a = "Airbus" and rho = "FO") then 
+			    86
+			elseif (a = "Airbus" and rho = "C") then 
+			    94
+			else 
+			    0
+			endif
+		}
+	}
+	Parameter k {
+		IndexDomain: [a,rho,q];
+	}
+	Variable u {
+		IndexDomain: [w,tau];
+		Range: nonnegative;
+	}
+	Variable x {
+		IndexDomain: [w,tau];
+		Range: nonnegative;
+	}
+	Variable m {
+		IndexDomain: [w,rho,a,q];
+		Range: nonnegative;
+	}
+	Variable n {
+		IndexDomain: [w,rho,a,q];
+		Range: nonnegative;
+	}
+	Variable f {
+		IndexDomain: [w,rho,a,q];
+		Range: nonnegative;
+	}
+	Variable psi {
+		IndexDomain: [w,rho,a];
+		Range: nonnegative;
+	}
+	Variable tilde_psi {
+		IndexDomain: [w,a];
+		Range: nonnegative;
+	}
+	Variable c_ {
+		IndexDomain: [w,rho,a,q];
+		Range: nonnegative;
+	}
+	Variable tilde_c {
+		IndexDomain: [w,rho,a,q];
+		Range: nonnegative;
+	}
+	Variable z {
+		IndexDomain: [w,g];
+		Range: nonnegative;
+	}
+	Variable h {
+		IndexDomain: [w,rho,a,q];
+		Range: nonnegative;
+	}
+	Constraint training1 {
+		IndexDomain: [w,rho,a,q];
+		Definition: {
+			c_[w,rho,a,q] =
+			         c_[ Element(Weeks, ord(w)-1), rho, a, q ]
+			       + sum( tau
+			            | ord(w) > l_t[tau],               ! only include if class has finished
+			              beta_end[tau,rho,a]
+			            * x[ Element(Weeks, ord(w)-l_t[tau]), tau ]
+			         )
+			       - h[w,rho,a,q]
+			      ;
+		}
+	}
+	Constraint training2 {
+		IndexDomain: [w,rho,a,q];
+		Definition: {
+			c_[w,rho,a,q] =
+			         c_[ Element(Weeks, ord(w)-1), rho, a, q ]
+			       - h[w,rho,a,q]
+			      ;
+		}
+	}
+	Constraint temppilot2 {
+		IndexDomain: (w,rho,a,q_qual);
+		Definition: {
+			tilde_c(w,rho,a,q_qual)
+			      = c_(w,rho,a,q_qual)
+			      - crewleaving(w,a,rho,q_qual);
+		}
+	}
+	Procedure MainInitialization {
+		Body: {
+			axll::OpenWorkBook("CrewTrainingData.xlsx");
+			PopulateDataDependentSets();
+			ParameterProceduresRunAll();
+			axll::CloseWorkBook("CrewTrainingData.xlsx");
+		}
+		Comment: "Add initialization statements here that do NOT require any library being initialized already.";
+	}
+	Procedure PostMainInitialization {
+		Comment: {
+			"Add initialization statements here that require that the libraries are already initialized properly,
+			or add statements that require the Data Management module to be initialized."
+		}
+	}
+	Procedure MainExecution;
+	Procedure PreMainTermination {
+		Body: {
+			return DataManagementExit();
+		}
+		Comment: {
+			"Add termination statements here that require all libraries to be still alive.
+			Return 1 if you allow the termination sequence to continue.
+			Return 0 if you want to cancel the termination sequence."
+		}
+	}
+	Procedure MainTermination {
+		Body: {
+			return 1;
+		}
+		Comment: {
+			"Add termination statements here that do not require all libraries to be still alive.
+			Return 1 to allow the termination sequence to continue.
+			Return 0 if you want to cancel the termination sequence.
+			It is recommended to only use the procedure PreMainTermination to cancel the termination sequence and let this procedure always return 1."
+		}
+	}
+	Procedure PopulateDataDependentSets {
+		Body: {
+			!axll::OpenWorkBook("CrewTrainingData.xlsx");
+			PopulateCrewRatings();
+			PopulateTrainingTypes();
+			PopulateSimulatorWeeks();
+			PopulateWeeks();
+			!axll::CloseAllWorkBooks;
+		}
+	}
+	Procedure ParameterProceduresRunAll {
+		Body: {
+			PopulateC_0();
+			Populateinstructor_need();
+			PopulateDeltaa();
+			Procedurecrewleaving();
+			Procedurexi();
+			Proceduresigma();
+			Procedurel_t();
+			Procedurekappa();
+			Procedurezeta();
+			ProcedureBeta();
+			Procedurelambda_();
+			Procedurek();
+		}
+	}
+	Section Parameter_Procedures {
+		Procedure PopulateC_0 {
+			Body: {
+				
+				empty c_0;
+				axll::SelectSheet(SheetName       : "Initial Crew");
+				axll::ReadList(
+				   IdentifierReference      : c_0(a,rho),
+				   RowHeaderRange           : "A2:B7",    ! A=Aircraft, B=Category
+				   DataRange                : "C2:C7",    ! C=Total
+				   ModeForUnknownElements   : 0,
+				   MergeWithExistingData    : 0
+				);
+			}
+		}
+		Procedure Populateinstructor_need {
+			Body: {
+				empty instructor_need;
+				axll::SelectSheet(SheetName : "Training");       ! your sheet name
+				axll::ReadList(
+				   IdentifierReference    : instructor_need(w,tau,q),
+				   RowHeaderRange         : "A2:C36",  ! A=Week, B=Training Type, C=Qualification
+				   DataRange              : "D2:D36",  ! D=Capacity Needed
+				   ModeForUnknownElements : 0,          ! error if you have a week/tau/q not in the sets
+				   MergeWithExistingData  : 0           ! clear before reading
+				);
+			}
+		}
+		Procedure PopulateDeltaa {
+			Body: {
+				empty Deltaa;
+				
+				axll::SelectSheet(SheetName : "Crew Demand");
+				axll::ReadList(
+				   IdentifierReference      : Deltaa,
+				   RowHeaderRange           : "A2:B105",   ! A=Week, B=Aircraft
+				   DataRange                : "C2:C105",   ! C=Demand
+				   ModeForUnknownElements   : 0,          ! error if an a∉AircraftTypes or w∉Weeks
+				   MergeWithExistingData    : 0           ! start from an empty Delta
+				);
+			}
+		}
+		Procedure Procedurecrewleaving {
+			Body: {
+				!— clear out old data —
+				empty crewleaving;
+				
+				!— read departures —
+				axll::SelectSheet(SheetName       : "Crew Leaving");
+				axll::ReadList(
+				   IdentifierReference      : crewleaving(w,a,rho,q),
+				   RowHeaderRange           : "B2:E20",   ! A=Week, B=CrewType, C=Aircraft, D=Qualification
+				   DataRange                : "F2:F20",   ! E=LeavingCount
+				   ModeForUnknownElements   : 0,           ! error if Excel has an element outside your sets
+				   MergeWithExistingData    : 0            ! reset before loading
+				);
+			}
+		}
+		Procedure Procedurexi {
+			Body: {
+				empty xi;
+				axll::SelectSheet(SheetName : "Simulator Availability");
+				axll::ReadList(
+				   IdentifierReference      : xi,
+				   RowHeaderRange           : "A2:A53",    ! A=Week
+				   DataRange                : "B2:B53",    ! B=Available Simulators
+				   ModeForUnknownElements   : 0,
+				   MergeWithExistingData    : 0
+				);
+			}
+		}
+		Procedure Proceduresigma {
+			Body: {
+				empty sigma;
+				axll::SelectSheet(SheetName : "Training");
+				axll::ReadList(
+				   IdentifierReference      : sigma,
+				   RowHeaderRange           : "A2:B36",   ! A=Week, B=TrainingType
+				   DataRange                : "E2:E36",   ! C=Simulator Needed
+				   ModeForUnknownElements   : 0,
+				   MergeWithExistingData    : 0
+				);
+			}
+		}
+		Procedure Procedurel_t {
+			Body: {
+				empty l_t;
+				axll::SelectSheet(SheetName : "Duration");
+				axll::ReadList(
+				   IdentifierReference    : l_t,
+				   RowHeaderRange         : "A2:A6",   ! A = Training Type (τ)
+				   DataRange              : "B2:B6",   ! B = Week of Training (duration)
+				   ModeForUnknownElements : 0,           ! error if τ∉TrainingTypes
+				   MergeWithExistingData  : 0            ! clear before reading
+				);
+			}
+		}
+		Procedure Procedurekappa {
+			Body: {
+				empty kappa;
+				axll::SelectSheet(SheetName : "Training");
+				axll::ReadList(
+				   IdentifierReference      : kappa,
+				   RowHeaderRange           : "A2:B36",   ! A=Week, B=TrainingType
+				   DataRange                : "H2:H36",   ! C=Capacity Gained (0/1)
+				   ModeForUnknownElements   : 0,           ! error if w∉Weeks or τ∉TrainingTypes
+				   MergeWithExistingData    : 0            ! clear before reading
+				);
+			}
+		}
+		Procedure Procedurezeta {
+			Body: {
+				empty zeta;
+				axll::SelectSheet(SheetName : "Grounded Aircraft Cost");
+				axll::ReadTable(
+				   IdentifierReference        : zeta,
+				   RowHeaderRange            : "A2:A53",   ! column A: week 1..52
+				   ColumnHeaderRange         : "B1:K1",    ! columns B:O contain g=1..13
+				   DataRange                 : "B2:K53",   ! the 52×13 cost matrix
+				   ModeForUnknownElements    : 0,
+				   MergeWithExistingData     : 0
+				);
+			}
+		}
+		Procedure ProcedureBeta {
+			Body: {
+				empty beta_start;
+				axll::SelectSheet(SheetName       : "Start Types");
+				axll::ReadList(
+				   IdentifierReference      : beta_start,
+				   RowHeaderRange           : "A2:C6",   ! A=Training Type (τ), B=Crew Type (ρ), C=Aircraft (a)
+				   DataRange                : "D2:D6",   ! Column D holds the 1’s
+				   ModeForUnknownElements   : 0,         ! error if an element isn’t in the corresponding set
+				   MergeWithExistingData    : 0          ! clear before reading
+				);
+				
+				empty beta_end;
+				axll::SelectSheet(SheetName       : "End Types");
+				axll::ReadList(
+				   IdentifierReference      : beta_end,
+				   RowHeaderRange           : "A2:C6",   ! A=Training Type (τ), B=Crew Type (ρ), C=Aircraft (a)
+				   DataRange                : "D2:D6",   ! Column D holds the 1’s
+				   ModeForUnknownElements   : 0,
+				   MergeWithExistingData    : 0
+				);
+			}
+		}
+		Procedure Procedurelambda_ {
+			Body: {
+				empty lambda_;
+				axll::SelectSheet(SheetName       : "Training");
+				axll::ReadList(
+				   IdentifierReference      : lambda_,
+				   RowHeaderRange           : "B2:B36",   ! A = Training Type (τ)
+				   DataRange                : "F2:F36",   ! B = Max Students
+				   ModeForUnknownElements   : 0,           ! error if τ∉TrainingTypes
+				   MergeWithExistingData    : 0            ! clear before reading
+				);
+			}
+		}
+		Procedure Procedurek {
+			Body: {
+				empty k;
+				axll::SelectSheet(SheetName       : "Initial Crew Type Qualification");
+				axll::ReadList(
+				   IdentifierReference      : k,
+				   RowHeaderRange           : "A2:C13",   ! A=Aircraft, B=CrewType, C=Qualification
+				   DataRange                : "D2:D13",   ! D=NumberQualified
+				   ModeForUnknownElements   : 0,
+				   MergeWithExistingData    : 0
+				);
+			}
+		}
+	}
+	Section Set_Procedures {
+		Procedure PopulateCrewRatings {
+			Body: {
+				empty CrewRatings;
+				axll::SelectSheet("Initial Crew");
+				axll::ReadSet(
+				    SetReference            : CrewRatings,
+				    SetRange : "A2:A7",
+				        ExtendSuperSets           :  1,
+				        MergeWithExistingElements :  0,
+				        SkipEmptyCells            :  0);
+			}
+		}
+		Procedure PopulateTrainingTypes {
+			Body: {
+				empty TrainingTypes;
+				
+				        axll::SelectSheet("Training Types");
+				
+				        axll::ReadSet(
+				        SetReference     : TrainingTypes,
+					SetRange : "A2:A6",
+				        ExtendSuperSets           :  1,
+				        MergeWithExistingElements :  0,
+				        SkipEmptyCells            :  0);
+			}
+		}
+		Procedure PopulateSimulatorWeeks {
+			Body: {
+				empty SimulatorWeeks;
+				
+				        axll::SelectSheet("Old Crew Leaving");
+				
+				        axll::ReadSet(
+				            SetReference     : SimulatorWeeks,
+				            SetRange               : "A2:A53",
+				            ExtendSuperSets           :  1,
+				        MergeWithExistingElements :  0,
+				        SkipEmptyCells            :  0);
+			}
+		}
+		Procedure PopulateWeeks {
+			Body: {
+				empty Weeks;
+				
+				        axll::SelectSheet("Old Crew Leaving");
+				
+				        axll::ReadSet(
+				            SetReference     : Weeks,
+				            SetRange               : "A2:A53",
+				            ExtendSuperSets           :  1,
+				        MergeWithExistingElements :  0,
+				        SkipEmptyCells            :  0);
+			}
+		}
+	}
+	Section Quantities_and_Units {
+		Comment: {
+			"This section contains all the units and quantities that are added automatically by AIMMS.
+			It is recommended to declare all your quantities here."
+		}
+		Quantity SI_Time_Duration {
+			BaseUnit: s;
+			Conversions: minute->s : #-># * 60;
+			Comment: {
+				"Expresses the value for the duration of periods.
+				
+				The unit s has been added automatically because it is a required unit for AimmsWebUI.
+				
+				The unit minute has been added automatically because it is a required unit for AimmsWebUI."
+			}
+		}
+	}
+}
